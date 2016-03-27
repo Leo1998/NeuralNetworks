@@ -2,9 +2,6 @@ package com.nn.test;
 
 import com.nn.core.NeuralNetwork;
 import com.nn.core.NeuralNetworkDescriptor;
-import com.nn.core.neuronbehavior.Identity;
-import com.nn.core.neuronbehavior.NeuronBehavior;
-import com.nn.core.neuronbehavior.TangensHyperbolicus;
 import com.nn.core.training.Lesson;
 import com.nn.core.training.Sample;
 import com.nn.debug.DebugWindow;
@@ -13,8 +10,7 @@ public class TrainingTest {
 
 	public static void main(String[] args) {
 		int[] neuronsPerLayer = new int[] { 2, 6, 2 };
-		NeuronBehavior[] behaviors = new NeuronBehavior[] { new Identity(), new TangensHyperbolicus(), new TangensHyperbolicus() };
-		NeuralNetworkDescriptor desc = new NeuralNetworkDescriptor(neuronsPerLayer, behaviors);
+		NeuralNetworkDescriptor desc = new NeuralNetworkDescriptor(neuronsPerLayer);
 		desc.setFullyConnect(true);
 
 		NeuralNetwork nn = new NeuralNetwork(desc);

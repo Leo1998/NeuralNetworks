@@ -1,18 +1,20 @@
 package com.nn.core;
 
+import com.nn.core.neuronbehavior.Identity;
 import com.nn.core.neuronbehavior.NeuronBehavior;
+import com.nn.core.neuronbehavior.TangensHyperbolicus;
 
 public class NeuralNetworkDescriptor {
 
 	private int[] neuronsPerLayer;
-	private NeuronBehavior[] layerBehaviors;
+	private NeuronBehavior inputBehavior = new Identity();
+	private NeuronBehavior hiddenBehavior = new TangensHyperbolicus();
+	private NeuronBehavior outputBehavior = new TangensHyperbolicus();
 
 	private boolean fullyConnect = true;
 
-	public NeuralNetworkDescriptor(int[] neuronsPerLayer, NeuronBehavior[] layerBehaviors) {
+	public NeuralNetworkDescriptor(int[] neuronsPerLayer) {
 		this.setNeuronsPerLayer(neuronsPerLayer);
-		this.layerBehaviors = layerBehaviors;
-		assert (neuronsPerLayer.length == layerBehaviors.length);
 	}
 
 	public int[] getNeuronsPerLayer() {
@@ -45,16 +47,36 @@ public class NeuralNetworkDescriptor {
 		return neuronsPerLayer[layerIndex];
 	}
 
-	public NeuronBehavior getNeuronBehavior(int layerIndex) {
-		return layerBehaviors[layerIndex];
-	}
-
 	public boolean isFullyConnect() {
 		return fullyConnect;
 	}
 
 	public void setFullyConnect(boolean fullyConnect) {
 		this.fullyConnect = fullyConnect;
+	}
+
+	public NeuronBehavior getInputBehavior() {
+		return inputBehavior;
+	}
+
+	public void setInputBehavior(NeuronBehavior inputBehavior) {
+		this.inputBehavior = inputBehavior;
+	}
+
+	public NeuronBehavior getHiddenBehavior() {
+		return hiddenBehavior;
+	}
+
+	public void setHiddenBehavior(NeuronBehavior hiddenBehavior) {
+		this.hiddenBehavior = hiddenBehavior;
+	}
+
+	public NeuronBehavior getOutputBehavior() {
+		return outputBehavior;
+	}
+
+	public void setOutputBehavior(NeuronBehavior outputBehavior) {
+		this.outputBehavior = outputBehavior;
 	}
 
 }

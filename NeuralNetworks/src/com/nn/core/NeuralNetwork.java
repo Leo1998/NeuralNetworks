@@ -34,7 +34,12 @@ public class NeuralNetwork {
 
 		for (int i = 0; i < layerCount; i++) {
 			int c = descriptor.getNeuronsPerLayer(i);
-			NeuronBehavior behavior = descriptor.getNeuronBehavior(i);
+			NeuronBehavior behavior = descriptor.getHiddenBehavior();
+			if (i == 0) {
+				behavior = descriptor.getInputBehavior();
+			} else if (i == layerCount - 1) {
+				behavior = descriptor.getOutputBehavior();
+			}
 
 			Layer layer = new Layer(c, behavior);
 			layers.add(layer);
@@ -74,9 +79,15 @@ public class NeuralNetwork {
 	}
 
 	public void train(Lesson lesson, double learningRate) {
+		long startTime = System.currentTimeMillis();
+
 		for (Sample sample : lesson) {
 			trainBackpropagation(sample, learningRate);
 		}
+		
+		long endTime = System.currentTimeMillis();
+		long time = endTime - startTime;
+		System.out.println("NeuralNetwork: Training took " + time + " ms");
 	}
 
 	private void trainBackpropagation(Sample sample, double learningRate) {
