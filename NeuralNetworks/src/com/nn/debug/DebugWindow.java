@@ -98,10 +98,10 @@ public class DebugWindow implements KeyListener {
 
 			final int xStep = (xEnd - xStart) / nn.countLayers();
 
-			int xPos = xStart;
+			int xPos = xStart + (xStep / 2);
 			for (Layer layer : nn.getLayers()) {
-				int yPos = yStart;
 				final int yStep = (yEnd - yStart) / layer.countNeurons();
+				int yPos = yStart + (yStep / 2);
 
 				for (Neuron n : layer.getNeurons()) {
 					neuronPositions.put(n, new Point(xPos, yPos));
