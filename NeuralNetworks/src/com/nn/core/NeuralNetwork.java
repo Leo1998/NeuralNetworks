@@ -1,12 +1,12 @@
 package com.nn.core;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-import com.nn.core.neuronbehavior.Identity;
 import com.nn.core.neuronbehavior.NeuronBehavior;
-import com.nn.core.neuronbehavior.TangensHyperbolicus;
 import com.nn.core.training.Lesson;
 import com.nn.core.training.Sample;
 
@@ -80,68 +80,49 @@ public class NeuralNetwork {
 	}
 
 	private void trainBackpropagation(Sample sample, double learningRate) {
-		for (int i = 0; i < countLayers(); i++) {
-			NeuronBehavior b = descriptor.getNeuronBehavior(i);
-			assert(b instanceof TangensHyperbolicus || b instanceof Identity);
-		}
-
 		double[] input = sample.getInput();
 		double[] desiredOutput = sample.getDesiredOutput();
 
 		this.propagate(input);
 
-		Layer lastLayer = outputLayer;
-		double[] lastLayerErrors = new double[outputLayer.countNeurons()];
+		Map<Connection, Double> errorSignalMap = new HashMap<Connection, Double>();
 
-		// processing output layer
-		for (int i = 0; i < outputLayer.countNeurons(); i++) {
-			Neuron n = outputLayer.getNeuron(i);
-			double out = n.getOutput();
+		for (int l = countLayers() - 1; l > 0; l--) {
+			Layer layer = layers.get(l);
+			Map<Connection, Double> lastErrorSignalMap = new HashMap<Connection, Double>();
+			lastErrorSignalMap.putAll(errorSignalMap);
+			errorSignalMap.clear();
 
-			List<Connection> connections = n.getInputConnections();
-			for (Connection c : connections) {
-				double inNeuronOut = c.getInNeuron().getOutput();
-				double desired = desiredOutput[i];
-
-				double error = n.getBehavior().computeDerivative(out) * inNeuronOut * (desired - out);
-				lastLayerErrors[i] = error;
-				double deltaWeight = learningRate * error;
-
-				double newWeight = c.getWeight() + deltaWeight;
-				c.setWeight(newWeight);
-			}
-		}
-
-		// processing hidden layers
-		for (int i = countLayers() - 2; i > 0; i--) {
-			Layer hiddenLayer = this.layers.get(i);
-
-			for (int j = 0; j < hiddenLayer.countNeurons(); j++) {
-				Neuron n = hiddenLayer.getNeuron(i);
+			for (int i = 0; i < layer.countNeurons(); i++) {
+				Neuron n = layer.getNeuron(i);
 				double out = n.getOutput();
 
-				List<Connection> connections = n.getInputConnections();
-				for (Connection c : connections) {
-					double inNeuronOut = c.getInNeuron().getOutput();
-					double sumOutputs = 0;
+				for (Connection inConn : n.getInputConnections()) {
+					double inNeuronOut = inConn.getInNeuron().getOutput();
+					double netInput = inNeuronOut * inConn.getWeight();
 
-					for (int k = 0; k < lastLayer.countNeurons(); k++) {
-						Neuron outNeuron = lastLayer.getNeuron(k);
-						Connection outConn = outNeuron.findInputConnectionTo(n);
-						double outConnWeight = outConn.getWeight();
+					double errorSignal;
+					if (layer == outputLayer) {
+						errorSignal = n.getBehavior().computeDerivative(netInput) * (desiredOutput[i] - out);
+					} else {
+						double sum = 0;
 
-						sumOutputs += outConnWeight * lastLayerErrors[k];
+						for (Connection outConn : n.getOutputConnections()) {
+							double outConnWeight = outConn.getWeight();
+
+							sum += outConnWeight * lastErrorSignalMap.get(outConn);
+						}
+
+						errorSignal = n.getBehavior().computeDerivative(netInput) * sum;
 					}
 
-					double error = n.getBehavior().computeDerivative(out) * inNeuronOut * sumOutputs;
-					double deltaWeight = learningRate * error;
+					double deltaWeight = learningRate * errorSignal * inNeuronOut;
+					double newWeight = inConn.getWeight() + deltaWeight;
+					inConn.setWeight(newWeight);
 
-					double newWeight = c.getWeight() + deltaWeight;
-					c.setWeight(newWeight);
+					errorSignalMap.put(inConn, errorSignal);
 				}
 			}
-
-			// update lastErrorMap
 		}
 	}
 
