@@ -16,7 +16,7 @@ public class Neuron {
 	private double output = 0.0D;
 
 	public Neuron(NeuronBehavior behavior) {
-		this.behavior = behavior.getDedicatedInstance();
+		this.behavior = behavior.needsDedicatedInstance() ? behavior.getDedicatedInstance() : behavior;
 
 		this.inputConnections = new LinkedList<Connection>();
 		this.outputConnections = new LinkedList<Connection>();
@@ -44,6 +44,26 @@ public class Neuron {
 
 	public List<Connection> getOutputConnections() {
 		return outputConnections;
+	}
+
+	public Connection findInputConnectionTo(Neuron n) {
+		for (Connection c : inputConnections) {
+			if (c.getInNeuron() == n) {
+				return c;
+			}
+		}
+
+		return null;
+	}
+
+	public Connection findOutputConnectionTo(Neuron n) {
+		for (Connection c : outputConnections) {
+			if (c.getOutNeuron() == n) {
+				return c;
+			}
+		}
+
+		return null;
 	}
 
 	public int countInputs() {
@@ -85,6 +105,10 @@ public class Neuron {
 
 	public void resetFiredFlag() {
 		this.fired = false;
+	}
+
+	public NeuronBehavior getBehavior() {
+		return behavior;
 	}
 
 }

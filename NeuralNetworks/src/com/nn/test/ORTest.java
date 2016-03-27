@@ -2,15 +2,15 @@ package com.nn.test;
 
 import com.nn.core.NeuralNetwork;
 import com.nn.core.NeuralNetworkDescriptor;
-import com.nn.core.neuronbehavior.IdentityBehavior;
+import com.nn.core.neuronbehavior.Identity;
 import com.nn.core.neuronbehavior.NeuronBehavior;
-import com.nn.core.neuronbehavior.ThresholdBehavior;
+import com.nn.core.neuronbehavior.Threshold;
 
 public class ORTest {
 
 	public static void main(String[] args) {
 		int[] neuronsPerLayer = new int[] { 2, 1 };
-		NeuronBehavior[] behaviors = new NeuronBehavior[] { new IdentityBehavior(), new ThresholdBehavior(1.0) };
+		NeuronBehavior[] behaviors = new NeuronBehavior[] { new Identity(), new Threshold(1.0) };
 		NeuralNetworkDescriptor desc = new NeuralNetworkDescriptor(neuronsPerLayer, behaviors);
 		desc.setFullyConnect(true);
 
@@ -25,7 +25,7 @@ public class ORTest {
 	private static void calcOR(NeuralNetwork nn, double x, double y) {
 		double[] input = new double[] { x, y };
 
-		double[] output = nn.computeOutput(input);
+		double[] output = nn.propagate(input);
 
 		System.out.println("x: " + x + "  y: " + y + "  output: " + output[0]);
 	}

@@ -1,15 +1,18 @@
 package com.nn.core;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.nn.core.neuronbehavior.Identity;
 import com.nn.core.neuronbehavior.NeuronBehavior;
+import com.nn.core.neuronbehavior.TangensHyperbolicus;
+import com.nn.core.training.Lesson;
+import com.nn.core.training.Sample;
 
 public class NeuralNetwork {
 
 	private final NeuralNetworkDescriptor descriptor;
-
-	private double learningRate = 0.01;
 
 	private List<Layer> layers;
 	private Layer inputLayer;
@@ -54,7 +57,7 @@ public class NeuralNetwork {
 		}
 	}
 
-	public double[] computeOutput(double[] input) {
+	public double[] propagate(double[] input) {
 		assert (input.length == inputLayer.countNeurons());
 
 		inputLayer.setNeuronOutputs(input);
@@ -70,6 +73,78 @@ public class NeuralNetwork {
 		return result;
 	}
 
+	public void train(Lesson lesson, double learningRate) {
+		for (Sample sample : lesson) {
+			trainBackpropagation(sample, learningRate);
+		}
+	}
+
+	private void trainBackpropagation(Sample sample, double learningRate) {
+		for (int i = 0; i < countLayers(); i++) {
+			NeuronBehavior b = descriptor.getNeuronBehavior(i);
+			assert(b instanceof TangensHyperbolicus || b instanceof Identity);
+		}
+
+		double[] input = sample.getInput();
+		double[] desiredOutput = sample.getDesiredOutput();
+
+		this.propagate(input);
+
+		Layer lastLayer = outputLayer;
+		double[] lastLayerErrors = new double[outputLayer.countNeurons()];
+
+		// processing output layer
+		for (int i = 0; i < outputLayer.countNeurons(); i++) {
+			Neuron n = outputLayer.getNeuron(i);
+			double out = n.getOutput();
+
+			List<Connection> connections = n.getInputConnections();
+			for (Connection c : connections) {
+				double inNeuronOut = c.getInNeuron().getOutput();
+				double desired = desiredOutput[i];
+
+				double error = n.getBehavior().computeDerivative(out) * inNeuronOut * (desired - out);
+				lastLayerErrors[i] = error;
+				double deltaWeight = learningRate * error;
+
+				double newWeight = c.getWeight() + deltaWeight;
+				c.setWeight(newWeight);
+			}
+		}
+
+		// processing hidden layers
+		for (int i = countLayers() - 2; i > 0; i--) {
+			Layer hiddenLayer = this.layers.get(i);
+
+			for (int j = 0; j < hiddenLayer.countNeurons(); j++) {
+				Neuron n = hiddenLayer.getNeuron(i);
+				double out = n.getOutput();
+
+				List<Connection> connections = n.getInputConnections();
+				for (Connection c : connections) {
+					double inNeuronOut = c.getInNeuron().getOutput();
+					double sumOutputs = 0;
+
+					for (int k = 0; k < lastLayer.countNeurons(); k++) {
+						Neuron outNeuron = lastLayer.getNeuron(k);
+						Connection outConn = outNeuron.findInputConnectionTo(n);
+						double outConnWeight = outConn.getWeight();
+
+						sumOutputs += outConnWeight * lastLayerErrors[k];
+					}
+
+					double error = n.getBehavior().computeDerivative(out) * inNeuronOut * sumOutputs;
+					double deltaWeight = learningRate * error;
+
+					double newWeight = c.getWeight() + deltaWeight;
+					c.setWeight(newWeight);
+				}
+			}
+
+			// update lastErrorMap
+		}
+	}
+
 	public int countLayers() {
 		return this.layers.size();
 	}
@@ -82,16 +157,8 @@ public class NeuralNetwork {
 		return this.outputLayer.countNeurons();
 	}
 
-	public double getLearningRate() {
-		return learningRate;
-	}
-
-	public void setLearningRate(double learningRate) {
-		this.learningRate = learningRate;
-	}
-
 	public List<Layer> getLayers() {
-		return layers;
+		return Collections.unmodifiableList(layers);
 	}
 
 	public Layer getInputLayer() {
@@ -100,6 +167,16 @@ public class NeuralNetwork {
 
 	public Layer getOutputLayer() {
 		return outputLayer;
+	}
+
+	public List<Neuron> getAllNeurons() {
+		List<Neuron> all = new LinkedList<Neuron>();
+
+		for (Layer layer : layers) {
+			all.addAll(layer.getNeurons());
+		}
+
+		return all;
 	}
 
 }

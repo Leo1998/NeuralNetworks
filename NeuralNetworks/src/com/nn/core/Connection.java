@@ -6,7 +6,7 @@ public class Connection {
 	private double weight;
 
 	public Connection(Neuron in, Neuron out) {
-		this(in, out, 1.0D);
+		this(in, out, Math.random());
 	}
 
 	public Connection(Neuron in, Neuron out, double initialWeight) {

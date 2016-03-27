@@ -1,12 +1,13 @@
 package com.nn.core;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.nn.core.neuronbehavior.NeuronBehavior;
 
-public class Layer {
+public class Layer implements Iterable<Neuron> {
 
 	private List<Neuron> neurons;
 
@@ -56,11 +57,24 @@ public class Layer {
 	}
 
 	public List<Neuron> getNeurons() {
-		return Collections.unmodifiableList(neurons);
+		return Collections.unmodifiableList(this.neurons);
+	}
+
+	public Neuron getNeuron(int i) {
+		return this.neurons.get(i);
+	}
+
+	public boolean contains(Neuron n) {
+		return this.neurons.contains(n);
 	}
 
 	public int countNeurons() {
 		return this.neurons.size();
+	}
+
+	@Override
+	public Iterator<Neuron> iterator() {
+		return new LayerIterator(this);
 	}
 
 }

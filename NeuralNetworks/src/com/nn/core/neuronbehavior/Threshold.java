@@ -1,10 +1,10 @@
 package com.nn.core.neuronbehavior;
 
-public class ThresholdBehavior implements NeuronBehavior {
+public class Threshold implements NeuronBehavior {
 
 	private double threshold;
 
-	public ThresholdBehavior(double threshold) {
+	public Threshold(double threshold) {
 		this.threshold = threshold;
 	}
 
@@ -14,8 +14,18 @@ public class ThresholdBehavior implements NeuronBehavior {
 	}
 
 	@Override
+	public double computeDerivative(double input) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public NeuronBehavior getDedicatedInstance() {
-		return new ThresholdBehavior(getThreshold());
+		return new Threshold(getThreshold());
+	}
+
+	@Override
+	public boolean needsDedicatedInstance() {
+		return true;
 	}
 
 	public double getThreshold() {
