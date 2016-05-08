@@ -1,81 +1,68 @@
 package com.nn.core;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import com.nn.core.neuronbehavior.NeuronBehavior;
+import com.nn.core.neuron.BiasNeuron;
+import com.nn.core.neuron.Neuron;
 import com.nn.core.training.Lesson;
 import com.nn.core.training.Sample;
 
-public class NeuralNetwork {
+public abstract class NeuralNetwork {
 
-	private final NeuralNetworkDescriptor descriptor;
+	protected List<Layer> layers;
 
-	private List<Layer> layers;
-	private Layer inputLayer;
-	private Layer outputLayer;
+	protected List<Neuron> inputNeurons;
+	protected List<Neuron> outputNeurons;
 
-	public NeuralNetwork(NeuralNetworkDescriptor descriptor) {
-		this.descriptor = descriptor;
-		this.layers = new LinkedList<Layer>();
-
-		initialize();
+	public NeuralNetwork() {
+		this.layers = new ArrayList<>();
 	}
 
-	public NeuralNetworkDescriptor getDescriptor() {
-		return descriptor;
-	}
+	protected void setDefaultIO() {
+		this.inputNeurons = new ArrayList<>();
 
-	private void initialize() {
-		int layerCount = descriptor.countLayers();
-
-		for (int i = 0; i < layerCount; i++) {
-			int c = descriptor.getNeuronsPerLayer(i);
-			NeuronBehavior behavior = descriptor.getHiddenBehavior();
-			if (i == 0) {
-				behavior = descriptor.getInputBehavior();
-			} else if (i == layerCount - 1) {
-				behavior = descriptor.getOutputBehavior();
-			}
-
-			Layer layer = new Layer(c, behavior);
-			layers.add(layer);
-
-			if (i == 0) {
-				inputLayer = layer;
-			} else if (i == layerCount - 1) {
-				outputLayer = layer;
-			}
-		}
-		assert (layers.size() == layerCount);
-
-		if (descriptor.isFullyConnect()) {
-			for (int i = 0; i < layers.size() - 1; i++) {
-				Layer current = layers.get(i);
-				Layer next = layers.get(i + 1);
-
-				current.fullyConnectTo(next);
-			}
-		}
-	}
-
-	public double[] propagate(double[] input) {
-		assert (input.length == inputLayer.countNeurons());
-
-		inputLayer.setNeuronOutputs(input);
-
-		double[] result = outputLayer.fireAll();
-
-		for (Layer layer : layers) {
-			for (Neuron n : layer.getNeurons()) {
-				n.resetFiredFlag();
+		Layer firstLayer = getLayerAt(0);
+		for (Neuron neuron : firstLayer.getNeurons()) {
+			if (!(neuron instanceof BiasNeuron)) {
+				inputNeurons.add(neuron);
 			}
 		}
 
-		return result;
+		outputNeurons = ((Layer) getLayerAt(getLayerCount() - 1)).getNeurons();
+	}
+
+	public void setInput(double... inputVector) {
+		if (inputVector.length != inputNeurons.size()) {
+			throw new IllegalArgumentException("Input vector size does not match network input dimension!");
+		}
+
+		int i = 0;
+		for (Neuron neuron : this.inputNeurons) {
+			neuron.setInput(inputVector[i]);
+			i++;
+		}
+	}
+
+	public double[] getOutput() {
+		double[] outputBuffer = new double[outputNeurons.size()];
+
+		int i = 0;
+		for (Neuron c : outputNeurons) {
+			outputBuffer[i] = c.getOutput();
+			i++;
+		}
+
+		return outputBuffer;
+	}
+
+	public void calculate() {
+		for (Layer layer : this.layers) {
+			layer.calculate();
+		}
 	}
 
 	public void train(Lesson lesson, double learningRate) {
@@ -84,7 +71,7 @@ public class NeuralNetwork {
 		for (Sample sample : lesson) {
 			trainBackpropagation(sample, learningRate);
 		}
-		
+
 		long endTime = System.currentTimeMillis();
 		long time = endTime - startTime;
 		System.out.println("NeuralNetwork: Training took " + time + " ms");
@@ -94,42 +81,43 @@ public class NeuralNetwork {
 		double[] input = sample.getInput();
 		double[] desiredOutput = sample.getDesiredOutput();
 
-		this.propagate(input);
+		this.setInput(input);
+		this.calculate();
 
 		Map<Connection, Double> errorSignalMap = new HashMap<Connection, Double>();
 
-		for (int l = countLayers() - 1; l > 0; l--) {
+		for (int l = getLayerCount() - 1; l > 0; l--) {
 			Layer layer = layers.get(l);
 			Map<Connection, Double> lastErrorSignalMap = new HashMap<Connection, Double>();
 			lastErrorSignalMap.putAll(errorSignalMap);
 			errorSignalMap.clear();
 
-			for (int i = 0; i < layer.countNeurons(); i++) {
+			for (int i = 0; i < layer.getNeuronCount(); i++) {
 				Neuron n = layer.getNeuron(i);
 				double out = n.getOutput();
 
 				for (Connection inConn : n.getInputConnections()) {
 					double inNeuronOut = inConn.getInNeuron().getOutput();
-					double netInput = inNeuronOut * inConn.getWeight();
+					double netInput = inNeuronOut * inConn.getWeight().getValue();
 
 					double errorSignal;
-					if (layer == outputLayer) {
-						errorSignal = n.getBehavior().computeDerivative(netInput) * (desiredOutput[i] - out);
+					if (layer == getLayerAt(getLayerCount() - 1)) {
+						errorSignal = n.getTransferFunction().getDerivative(netInput) * (desiredOutput[i] - out);
 					} else {
 						double sum = 0;
 
 						for (Connection outConn : n.getOutputConnections()) {
-							double outConnWeight = outConn.getWeight();
+							double outConnWeight = outConn.getWeight().getValue();
 
 							sum += outConnWeight * lastErrorSignalMap.get(outConn);
 						}
 
-						errorSignal = n.getBehavior().computeDerivative(netInput) * sum;
+						errorSignal = n.getTransferFunction().getDerivative(netInput) * sum;
 					}
 
 					double deltaWeight = learningRate * errorSignal * inNeuronOut;
-					double newWeight = inConn.getWeight() + deltaWeight;
-					inConn.setWeight(newWeight);
+					double newWeight = inConn.getWeight().getValue() + deltaWeight;
+					inConn.getWeight().setValue(newWeight);
 
 					errorSignalMap.put(inConn, errorSignal);
 				}
@@ -137,38 +125,32 @@ public class NeuralNetwork {
 		}
 	}
 
-	public int countLayers() {
+	public int getLayerCount() {
 		return this.layers.size();
 	}
 
-	public int countInputNeurons() {
-		return this.inputLayer.countNeurons();
+	public void addLayer(Layer layer) {
+		layers.add(layer);
 	}
 
-	public int countOutputNeurons() {
-		return this.outputLayer.countNeurons();
+	public void addLayer(Layer layer, int i) {
+		layers.add(i, layer);
 	}
 
 	public List<Layer> getLayers() {
 		return Collections.unmodifiableList(layers);
 	}
 
-	public Layer getInputLayer() {
-		return inputLayer;
+	public Layer getLayerAt(int i) {
+		return layers.get(i);
 	}
 
-	public Layer getOutputLayer() {
-		return outputLayer;
+	public List<Neuron> getInputNeurons() {
+		return inputNeurons;
 	}
 
-	public List<Neuron> getAllNeurons() {
-		List<Neuron> all = new LinkedList<Neuron>();
-
-		for (Layer layer : layers) {
-			all.addAll(layer.getNeurons());
-		}
-
-		return all;
+	public List<Neuron> getOutputNeurons() {
+		return outputNeurons;
 	}
 
 }

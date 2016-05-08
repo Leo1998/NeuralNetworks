@@ -3,6 +3,8 @@ package com.nn.core;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import com.nn.core.neuron.Neuron;
+
 public class LayerIterator implements Iterator<Neuron> {
 
 	private int currentIndex = 0;
@@ -14,7 +16,7 @@ public class LayerIterator implements Iterator<Neuron> {
 
 	@Override
 	public boolean hasNext() {
-		return currentIndex < layer.countNeurons();
+		return currentIndex < layer.getNeuronCount();
 	}
 
 	@Override

@@ -17,7 +17,8 @@ import javax.swing.WindowConstants;
 import com.nn.core.Connection;
 import com.nn.core.Layer;
 import com.nn.core.NeuralNetwork;
-import com.nn.core.Neuron;
+import com.nn.core.neuron.Neuron;
+import com.nn.core.util.MathUtil;
 
 public class DebugWindow implements KeyListener {
 
@@ -81,7 +82,7 @@ public class DebugWindow implements KeyListener {
 		private static final long serialVersionUID = 1L;
 
 		public DebugPanel() {
-			this.setBackground(Color.LIGHT_GRAY);
+			this.setBackground(Color.DARK_GRAY);
 		}
 
 		@Override
@@ -96,11 +97,11 @@ public class DebugWindow implements KeyListener {
 			final int yStart = 100;
 			final int yEnd = getHeight() - 100;
 
-			final int xStep = (xEnd - xStart) / nn.countLayers();
+			final int xStep = (xEnd - xStart) / nn.getLayerCount();
 
 			int xPos = xStart + (xStep / 2);
 			for (Layer layer : nn.getLayers()) {
-				final int yStep = (yEnd - yStart) / layer.countNeurons();
+				final int yStep = (yEnd - yStart) / layer.getNeuronCount();
 				int yPos = yStart + (yStep / 2);
 
 				for (Neuron n : layer.getNeurons()) {
@@ -112,11 +113,6 @@ public class DebugWindow implements KeyListener {
 				xPos += xStep;
 			}
 
-			// draw neurons
-			for (Point p : neuronPositions.values()) {
-				drawNeuron(g2d, p.x, p.y);
-			}
-
 			// draw connections
 			for (Layer layer : nn.getLayers()) {
 				for (Neuron n : layer.getNeurons()) {
@@ -125,17 +121,29 @@ public class DebugWindow implements KeyListener {
 						Point p2 = neuronPositions.get(c.getOutNeuron());
 						Point center = new Point(p1.x + (p2.x - p1.x) / 2, p1.y + (p2.y - p1.y) / 2);
 
+						g2d.setColor(Color.BLACK);
 						g2d.drawLine(p1.x, p1.y, p2.x, p2.y);
-						g2d.drawString("" + c.getWeight(), center.x, center.y);
+						g2d.setColor(Color.WHITE);
+						g2d.drawString("" + MathUtil.round(c.getWeight().getValue(), 2), center.x, center.y);
 					}
 				}
 			}
+
+			// draw neurons
+			for (Neuron neuron : neuronPositions.keySet()) {
+				Point p = neuronPositions.get(neuron);
+				drawNeuron(g2d, p.x, p.y, neuron);
+			}
 		}
 
-		private void drawNeuron(Graphics2D g2d, int xPos, int yPos) {
-			final int size = 50;
+		private void drawNeuron(Graphics2D g2d, int xPos, int yPos, Neuron n) {
+			final int size = 60;
 
-			g2d.drawOval(xPos - (size / 2), yPos - (size / 2), size, size);
+			g2d.setColor(Color.BLUE);
+			g2d.fillOval(xPos - (size / 2), yPos - (size / 2), size, size);
+
+			g2d.setColor(Color.WHITE);
+			g2d.drawString("" + MathUtil.round(n.getOutput(), 2), xPos, yPos);
 		}
 
 	}

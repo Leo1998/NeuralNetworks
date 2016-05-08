@@ -1,7 +1,11 @@
 package com.nn.test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.nn.core.NeuralNetwork;
-import com.nn.core.NeuralNetworkDescriptor;
+import com.nn.core.functional.transfer.TransferFunctionType;
+import com.nn.core.nnet.MultiLayerPerceptron;
 import com.nn.core.training.Lesson;
 import com.nn.core.training.Sample;
 import com.nn.debug.DebugWindow;
@@ -9,39 +13,54 @@ import com.nn.debug.DebugWindow;
 public class TrainingTest {
 
 	public static void main(String[] args) {
-		int[] neuronsPerLayer = new int[] { 2, 6, 2 };
-		NeuralNetworkDescriptor desc = new NeuralNetworkDescriptor(neuronsPerLayer);
-		desc.setFullyConnect(true);
+		List<Integer> neuronsInLayers = new ArrayList<>();
+		neuronsInLayers.add(3);
+		neuronsInLayers.add(10);
+		neuronsInLayers.add(1);
 
-		NeuralNetwork nn = new NeuralNetwork(desc);
+		NeuralNetwork nn = new MultiLayerPerceptron(neuronsInLayers, TransferFunctionType.Sigmoid, true);
 
 		DebugWindow debugWindow = new DebugWindow(nn);
+
+		calcOutput(nn, 1.0, 1.0, 1.0);
+		calcOutput(nn, 2.0, 1.0, 2.0);
+
 		debugWindow.waitForEvent();
 
-		Sample[] samples = new Sample[10000];
+		Sample[] samples = new Sample[25000];
 		for (int j = 0; j < samples.length; j++) {
-			samples[j] = new Sample(new double[] { 1.0, 5.0 }, new double[] { 0.8, 0.45 });
+			if (Math.random() > 0.5) {
+				samples[j] = new Sample(new double[] { 1.0, 1.0, 1.0 }, new double[] { 0.5454545454 });
+			} else {
+				samples[j] = new Sample(new double[] { 2.0, 1.0, 2.0 }, new double[] { 0.6666666666 });
+			}
 		}
 		Lesson lesson = new Lesson(samples);
 
-		nn.train(lesson, 0.01);
-		calcOutput(nn, 1.0, 5.0);
+		nn.train(lesson, 0.1);
+
+		calcOutput(nn, 1.0, 1.0, 1.0);
+		calcOutput(nn, 2.0, 1.0, 2.0);
 
 		debugWindow.refresh();
 	}
 
-	private static void calcOutput(NeuralNetwork nn, double x, double y) {
-		double[] input = new double[] { x, y };
+	private static void calcOutput(NeuralNetwork nn, double... input) {
+		nn.setInput(input);
+		nn.calculate();
+		double[] output = nn.getOutput();
 
-		double[] output = nn.propagate(input);
-
+		System.out.printf("Inputs: ");
 		for (int i = 0; i < input.length; i++) {
-			System.out.println("in[" + i + "]: " + input[i]);
+			System.out.printf(input[i] + "   ");
 		}
+		System.out.println();
 
+		System.out.printf("Outputs: ");
 		for (int i = 0; i < output.length; i++) {
-			System.out.println("out[" + i + "]: " + output[i]);
+			System.out.printf(output[i] + "   ");
 		}
+		System.out.println();
 	}
 
 }

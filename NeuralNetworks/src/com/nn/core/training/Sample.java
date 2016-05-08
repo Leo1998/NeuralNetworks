@@ -24,9 +24,6 @@ public class Sample {
 		if (desiredOutput.length < 1) {
 			throw new IllegalArgumentException("0 Desired Outputs given.");
 		}
-		if (input.length != desiredOutput.length) {
-			throw new IllegalArgumentException("Desiredoutputs.length != inputs.length.");
-		}
 	}
 
 	public double[] getInput() {

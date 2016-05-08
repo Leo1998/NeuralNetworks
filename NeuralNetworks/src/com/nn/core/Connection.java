@@ -1,19 +1,25 @@
 package com.nn.core;
 
+import com.nn.core.neuron.Neuron;
+
 public class Connection {
 
 	private final Neuron in, out;
-	private double weight;
+	private Weight weight;
 
 	public Connection(Neuron in, Neuron out) {
-		this(in, out, Math.random());
+		this(in, out, new Weight());
 	}
 
-	public Connection(Neuron in, Neuron out, double initialWeight) {
+	public Connection(Neuron in, Neuron out, double weight) {
+		this(in, out, new Weight(weight));
+	}
+
+	public Connection(Neuron in, Neuron out, Weight weight) {
 		this.in = in;
 		this.out = out;
 
-		this.weight = initialWeight;
+		this.weight = weight;
 	}
 
 	public Neuron getInNeuron() {
@@ -24,12 +30,20 @@ public class Connection {
 		return out;
 	}
 
-	public double getWeight() {
+	public Weight getWeight() {
 		return weight;
 	}
 
-	public void setWeight(double weight) {
+	public void setWeight(Weight weight) {
 		this.weight = weight;
+	}
+
+	public double getInput() {
+		return this.in.getOutput();
+	}
+
+	public double getWeightedInput() {
+		return this.getInput() * weight.getValue();
 	}
 
 }
