@@ -6,7 +6,7 @@ public class Lesson implements Iterable<Sample> {
 
 	private final Sample[] samples;
 
-	public Lesson(Sample[] samples) {
+	public Lesson(Sample... samples) {
 		this.samples = samples;
 	}
 
