@@ -47,7 +47,11 @@ public abstract class NeuralNetwork {
 		}
 	}
 
-	public double[] getOutput() {
+	public double[] calculateOutput() {
+		for (Layer layer : this.layers) {
+			layer.calculate();
+		}
+		
 		double[] outputBuffer = new double[outputNeurons.size()];
 
 		int i = 0;
@@ -57,12 +61,6 @@ public abstract class NeuralNetwork {
 		}
 
 		return outputBuffer;
-	}
-
-	public void calculate() {
-		for (Layer layer : this.layers) {
-			layer.calculate();
-		}
 	}
 
 	public void train(Lesson lesson, double learningRate) {
@@ -82,7 +80,7 @@ public abstract class NeuralNetwork {
 		double[] desiredOutput = sample.getDesiredOutput();
 
 		this.setInput(input);
-		this.calculate();
+		this.calculateOutput();
 
 		Map<Connection, Double> errorSignalMap = new HashMap<Connection, Double>();
 

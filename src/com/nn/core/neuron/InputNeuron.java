@@ -1,7 +1,7 @@
 package com.nn.core.neuron;
 
 import com.nn.core.functional.input.WeightedSum;
-import com.nn.core.functional.transfer.Linear;
+import com.nn2.core.functions.Linear;
 
 public class InputNeuron extends Neuron {
 

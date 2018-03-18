@@ -7,8 +7,8 @@ import com.nn.core.Connection;
 import com.nn.core.Weight;
 import com.nn.core.functional.input.InputFunction;
 import com.nn.core.functional.input.WeightedSum;
-import com.nn.core.functional.transfer.Linear;
-import com.nn.core.functional.transfer.TransferFunction;
+import com.nn2.core.functions.Linear;
+import com.nn2.core.functions.TransferFunction;
 
 public abstract class Neuron {
 

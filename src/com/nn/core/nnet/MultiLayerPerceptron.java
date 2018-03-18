@@ -6,11 +6,11 @@ import com.nn.core.ConnectionCreator;
 import com.nn.core.Layer;
 import com.nn.core.NeuralNetwork;
 import com.nn.core.functional.input.WeightedSum;
-import com.nn.core.functional.transfer.TransferFunctionType;
 import com.nn.core.neuron.BiasNeuron;
 import com.nn.core.neuron.InputNeuron;
 import com.nn.core.neuron.InputOutputNeuron;
 import com.nn.core.neuron.Neuron;
+import com.nn2.core.functions.TransferFunctionType;
 
 public class MultiLayerPerceptron extends NeuralNetwork {
 

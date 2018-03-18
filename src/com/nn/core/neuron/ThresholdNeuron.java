@@ -1,7 +1,7 @@
 package com.nn.core.neuron;
 
 import com.nn.core.functional.input.InputFunction;
-import com.nn.core.functional.transfer.TransferFunction;
+import com.nn2.core.functions.TransferFunction;
 
 public class ThresholdNeuron extends Neuron {
 
