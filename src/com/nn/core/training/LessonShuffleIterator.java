@@ -12,15 +12,15 @@ public class LessonShuffleIterator implements Iterator<Sample> {
 
 	public LessonShuffleIterator(Lesson lesson) {
 		this.lesson = lesson;
-		
+
 		this.shuffleArray = new Sample[lesson.countSamples()];
 		for (int i = 0; i < lesson.countSamples(); i++) {
 			this.shuffleArray[i] = lesson.getSample(i);
 		}
-		
+
 		shuffle();
 	}
-	
+
 	private void shuffle() {
 		Random random = new Random();
 		for (int i = shuffleArray.length - 1; i > 0; i--) {

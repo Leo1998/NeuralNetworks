@@ -7,15 +7,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
@@ -41,7 +38,7 @@ public class MnistTest implements KeyListener {
 	public MnistTest() {
 		int[] shape = { NEURON_GRID * NEURON_GRID, 300, LETTERS.length };
 
-		this.neuralNetwork = new NeuralNetwork(shape, TransferFunctionType.Sigmoid, true);
+		this.neuralNetwork = new NeuralNetwork(shape, TransferFunctionType.Sigmoid);
 
 		createView();
 	}
@@ -59,37 +56,38 @@ public class MnistTest implements KeyListener {
 	protected void trainMnistDataset() {
 		if (worker != null)
 			return;
-		
+
 		this.worker = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				System.out.println("Loading Mnist Dataset...");
 				try {
 					MnistManager m = new MnistManager("train-images.idx3-ubyte", "train-labels.idx1-ubyte", 60000);
-					
+
 					for (int i = 0; i < 60000; i++) {
 						m.setCurrent(i);
-						
+
 						int[][] image = m.readImage();
 						int label = m.readLabel();
-						
+
 						drawPanel.display(image);
 						resultLabel.setText("Label: " + label);
-						
+
 						try {
 							Thread.sleep(300);
-						} catch(Exception e) {}
+						} catch (Exception e) {
+						}
 					}
-					
+
 					m.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				
+
 				worker = null;
 			}
 		});
-		
+
 		worker.start();
 	}
 

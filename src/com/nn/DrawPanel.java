@@ -29,46 +29,46 @@ public class DrawPanel extends JPanel implements MouseListener, MouseMotionListe
 		this.img = new BufferedImage(size, size, BufferedImage.TYPE_INT_RGB);
 		this.pixels = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
 	}
-	
+
 	public void display(int[][] image) {
 		int scale = size / image.length;
-		
+
 		for (int xGrid = 0; xGrid < image.length; xGrid++) {
 			for (int yGrid = 0; yGrid < image[xGrid].length; yGrid++) {
-				
+
 				for (int x = xGrid * scale; x < xGrid * scale + scale; x++) {
 					for (int y = yGrid * scale; y < yGrid * scale + scale; y++) {
 						pixels[x + y * size] = image[xGrid][yGrid];
 					}
 				}
-				
+
 			}
 		}
-		
+
 		repaint();
 	}
-	
+
 	public double[] toGrid(int gridSize) {
 		double[] grid = new double[gridSize * gridSize];
-		
+
 		int scale = size / gridSize;
-		
+
 		for (int xGrid = 0; xGrid < gridSize; xGrid++) {
 			for (int yGrid = 0; yGrid < gridSize; yGrid++) {
 				int count = 0;
-				
+
 				for (int x = xGrid * scale; x < xGrid * scale + scale; x++) {
 					for (int y = yGrid * scale; y < yGrid * scale + scale; y++) {
 						if (pixels[x + y * size] > 0) {
-							count ++;
+							count++;
 						}
 					}
 				}
-				
+
 				grid[xGrid + yGrid * gridSize] = count / (double) (scale * scale);
 			}
 		}
-		
+
 		return grid;
 	}
 
@@ -80,14 +80,14 @@ public class DrawPanel extends JPanel implements MouseListener, MouseMotionListe
 
 		g2d.drawImage(img, null, 0, 0);
 	}
-	
+
 	public void clear() {
 		for (int x = 0; x < size; x++) {
 			for (int y = 0; y < size; y++) {
 				pixels[x + y * size] = 0;
 			}
 		}
-		
+
 		this.repaint();
 	}
 
@@ -113,7 +113,7 @@ public class DrawPanel extends JPanel implements MouseListener, MouseMotionListe
 				}
 			}
 		}
-		
+
 		this.repaint();
 	}
 
@@ -128,7 +128,6 @@ public class DrawPanel extends JPanel implements MouseListener, MouseMotionListe
 		// TODO Auto-generated method stub
 
 	}
-
 
 	@Override
 	public void mouseReleased(MouseEvent e) {

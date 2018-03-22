@@ -2,7 +2,8 @@ package com.nn.core.functions;
 
 public enum TransferFunctionType {
 
-	Linear("com.nn.core.functions.Linear"), Tanh("com.nn.core.functions.Tanh"), Sigmoid("com.nn.core.functions.Sigmoid"), Step("com.nn.core.functions.Step");
+	Linear("com.nn.core.functions.Linear"), Tanh("com.nn.core.functions.Tanh"), Sigmoid(
+			"com.nn.core.functions.Sigmoid"), Step("com.nn.core.functions.Step");
 
 	public final String className;
 

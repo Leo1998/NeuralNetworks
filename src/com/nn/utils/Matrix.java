@@ -167,7 +167,7 @@ public class Matrix {
 		return true;
 	}
 
-	public void ramdomize(final double min, final double max) {
+	public void randomize(final double min, final double max) {
 		for (int r = 0; r < getRows(); r++) {
 			for (int c = 0; c < getCols(); c++) {
 				this.matrix[r][c] = (Math.random() * (max - min)) + min;

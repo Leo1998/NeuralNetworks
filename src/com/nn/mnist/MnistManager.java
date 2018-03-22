@@ -18,7 +18,6 @@
 
 package com.nn.mnist;
 
-
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,163 +30,164 @@ import java.io.IOException;
  * as well as simultaneously.
  * <p>
  * Provides also method for exporting an image by writing it as a PPM file.
- * <p> 
+ * <p>
  * Example usage:
+ * 
  * <pre>
- *  MnistManager m = new MnistManager("t10k-images.idx3-ubyte", "t10k-labels.idx1-ubyte");
- *  m.setCurrent(10); //index of the image that we are interested in
- *  int[][] image = m.readImage();
- *  System.out.println("Label:" + m.readLabel());
- *  MnistManager.writeImageToPpm(image, "10.ppm");
+ * MnistManager m = new MnistManager("t10k-images.idx3-ubyte", "t10k-labels.idx1-ubyte");
+ * m.setCurrent(10); // index of the image that we are interested in
+ * int[][] image = m.readImage();
+ * System.out.println("Label:" + m.readLabel());
+ * MnistManager.writeImageToPpm(image, "10.ppm");
  * </pre>
  */
 public class MnistManager {
-	
+
 	public static final int NUM_EXAMPLES = 60000;
-    public static final int NUM_EXAMPLES_TEST = 10000;
-	
-    MnistImageFile images;
-    private MnistLabelFile labels;
+	public static final int NUM_EXAMPLES_TEST = 10000;
 
-    private byte[][] imagesArr;
-    private int[] labelsArr;
-    private static final int HEADER_SIZE = 8;
+	MnistImageFile images;
+	private MnistLabelFile labels;
 
-    /**
-     * Writes the given image in the given file using the PPM data format.
-     *
-     * @param image
-     * @param ppmFileName
-     * @throws IOException
-     */
-    public static void writeImageToPpm(int[][] image, String ppmFileName) throws IOException {
-        try (BufferedWriter ppmOut = new BufferedWriter(new FileWriter(ppmFileName))) {
-            int rows = image.length;
-            int cols = image[0].length;
-            ppmOut.write("P3\n");
-            ppmOut.write("" + rows + " " + cols + " 255\n");
-            for (int i = 0; i < rows; i++) {
-                StringBuilder s = new StringBuilder();
-                for (int j = 0; j < cols; j++) {
-                    s.append(image[i][j] + " " + image[i][j] + " " + image[i][j] + "  ");
-                }
-                ppmOut.write(s.toString());
-            }
-        }
+	private byte[][] imagesArr;
+	private int[] labelsArr;
+	private static final int HEADER_SIZE = 8;
 
-    }
+	/**
+	 * Writes the given image in the given file using the PPM data format.
+	 *
+	 * @param image
+	 * @param ppmFileName
+	 * @throws IOException
+	 */
+	public static void writeImageToPpm(int[][] image, String ppmFileName) throws IOException {
+		try (BufferedWriter ppmOut = new BufferedWriter(new FileWriter(ppmFileName))) {
+			int rows = image.length;
+			int cols = image[0].length;
+			ppmOut.write("P3\n");
+			ppmOut.write("" + rows + " " + cols + " 255\n");
+			for (int i = 0; i < rows; i++) {
+				StringBuilder s = new StringBuilder();
+				for (int j = 0; j < cols; j++) {
+					s.append(image[i][j] + " " + image[i][j] + " " + image[i][j] + "  ");
+				}
+				ppmOut.write(s.toString());
+			}
+		}
 
-    /**
-     * Constructs an instance managing the two given data files. Supports
-     * <code>NULL</code> value for one of the arguments in case reading only one
-     * of the files (images and labels) is required.
-     *
-     * @param imagesFile
-     *            Can be <code>NULL</code>. In that case all future operations
-     *            using that file will fail.
-     * @param labelsFile
-     *            Can be <code>NULL</code>. In that case all future operations
-     *            using that file will fail.
-     * @throws IOException
-     */
-    public MnistManager(String imagesFile, String labelsFile, boolean train) throws IOException {
-        this(imagesFile, labelsFile, train ? NUM_EXAMPLES : NUM_EXAMPLES_TEST);
-    }
+	}
 
-    public MnistManager(String imagesFile, String labelsFile, int numExamples) throws IOException {
-        if (imagesFile != null) {
-            images = new MnistImageFile(imagesFile, "r");
-            imagesArr = images.readImagesUnsafe(numExamples);
-        }
-        if (labelsFile != null) {
-            labels = new MnistLabelFile(labelsFile, "r");
-            labelsArr = labels.readLabels(numExamples);
-        }
-    }
+	/**
+	 * Constructs an instance managing the two given data files. Supports
+	 * <code>NULL</code> value for one of the arguments in case reading only one
+	 * of the files (images and labels) is required.
+	 *
+	 * @param imagesFile
+	 *            Can be <code>NULL</code>. In that case all future operations
+	 *            using that file will fail.
+	 * @param labelsFile
+	 *            Can be <code>NULL</code>. In that case all future operations
+	 *            using that file will fail.
+	 * @throws IOException
+	 */
+	public MnistManager(String imagesFile, String labelsFile, boolean train) throws IOException {
+		this(imagesFile, labelsFile, train ? NUM_EXAMPLES : NUM_EXAMPLES_TEST);
+	}
 
-    public MnistManager(String imagesFile, String labelsFile) throws IOException {
-        this(imagesFile, labelsFile, true);
-    }
+	public MnistManager(String imagesFile, String labelsFile, int numExamples) throws IOException {
+		if (imagesFile != null) {
+			images = new MnistImageFile(imagesFile, "r");
+			imagesArr = images.readImagesUnsafe(numExamples);
+		}
+		if (labelsFile != null) {
+			labels = new MnistLabelFile(labelsFile, "r");
+			labelsArr = labels.readLabels(numExamples);
+		}
+	}
 
-    /**
-     * Reads the current image.
-     *
-     * @return matrix
-     * @throws IOException
-     */
-    public int[][] readImage() throws IOException {
-        if (images == null) {
-            throw new IllegalStateException("Images file not initialized.");
-        }
-        return images.readImage();
-    }
+	public MnistManager(String imagesFile, String labelsFile) throws IOException {
+		this(imagesFile, labelsFile, true);
+	}
 
-    public byte[] readImageUnsafe(int i) {
-        return imagesArr[i];
-    }
+	/**
+	 * Reads the current image.
+	 *
+	 * @return matrix
+	 * @throws IOException
+	 */
+	public int[][] readImage() throws IOException {
+		if (images == null) {
+			throw new IllegalStateException("Images file not initialized.");
+		}
+		return images.readImage();
+	}
 
-    /**
-     * Set the position to be read.
-     *
-     * @param index
-     */
-    public void setCurrent(int index) {
-        images.setCurrentIndex(index);
-        labels.setCurrentIndex(index);
-    }
+	public byte[] readImageUnsafe(int i) {
+		return imagesArr[i];
+	}
 
-    /**
-     * Reads the current label.
-     *
-     * @return int
-     * @throws IOException
-     */
-    public int readLabel() throws IOException {
-        if (labels == null) {
-            throw new IllegalStateException("labels file not initialized.");
-        }
-        return labels.readLabel();
-    }
+	/**
+	 * Set the position to be read.
+	 *
+	 * @param index
+	 */
+	public void setCurrent(int index) {
+		images.setCurrentIndex(index);
+		labels.setCurrentIndex(index);
+	}
 
-    public int readLabel(int i) {
-        return labelsArr[i];
-    }
+	/**
+	 * Reads the current label.
+	 *
+	 * @return int
+	 * @throws IOException
+	 */
+	public int readLabel() throws IOException {
+		if (labels == null) {
+			throw new IllegalStateException("labels file not initialized.");
+		}
+		return labels.readLabel();
+	}
 
-    /**
-     * Get the underlying images file as {@link MnistImageFile}.
-     *
-     * @return {@link MnistImageFile}.
-     */
-    public MnistImageFile getImages() {
-        return images;
-    }
+	public int readLabel(int i) {
+		return labelsArr[i];
+	}
 
-    /**
-     * Get the underlying labels file as {@link MnistLabelFile}.
-     *
-     * @return {@link MnistLabelFile}.
-     */
-    public MnistLabelFile getLabels() {
-        return labels;
-    }
+	/**
+	 * Get the underlying images file as {@link MnistImageFile}.
+	 *
+	 * @return {@link MnistImageFile}.
+	 */
+	public MnistImageFile getImages() {
+		return images;
+	}
 
-    /**
-     * Close any resources opened by the manager.
-     */
-    public void close() {
-        if (images != null) {
-            try {
-                images.close();
-            } catch (IOException e) {
-            }
-            images = null;
-        }
-        if (labels != null) {
-            try {
-                labels.close();
-            } catch (IOException e) {
-            }
-            labels = null;
-        }
-    }
+	/**
+	 * Get the underlying labels file as {@link MnistLabelFile}.
+	 *
+	 * @return {@link MnistLabelFile}.
+	 */
+	public MnistLabelFile getLabels() {
+		return labels;
+	}
+
+	/**
+	 * Close any resources opened by the manager.
+	 */
+	public void close() {
+		if (images != null) {
+			try {
+				images.close();
+			} catch (IOException e) {
+			}
+			images = null;
+		}
+		if (labels != null) {
+			try {
+				labels.close();
+			} catch (IOException e) {
+			}
+			labels = null;
+		}
+	}
 }
