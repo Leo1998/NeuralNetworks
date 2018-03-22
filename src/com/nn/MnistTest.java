@@ -1,4 +1,4 @@
-package com.nn2;
+package com.nn;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -19,9 +19,9 @@ import javax.swing.JSlider;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 
-import com.nn2.core.NeuralNetwork;
-import com.nn2.core.functions.TransferFunctionType;
-import com.nn2.mnist.MnistManager;
+import com.nn.core.NeuralNetwork;
+import com.nn.core.functions.TransferFunctionType;
+import com.nn.mnist.MnistManager;
 
 public class MnistTest implements KeyListener {
 
@@ -41,7 +41,7 @@ public class MnistTest implements KeyListener {
 	public MnistTest() {
 		int[] shape = { NEURON_GRID * NEURON_GRID, 300, LETTERS.length };
 
-		this.neuralNetwork = new NeuralNetwork(shape, TransferFunctionType.Sigmoid);
+		this.neuralNetwork = new NeuralNetwork(shape, TransferFunctionType.Sigmoid, true);
 
 		createView();
 	}
@@ -49,7 +49,7 @@ public class MnistTest implements KeyListener {
 	protected void detectCurrentLetter() {
 		double[] grid = drawPanel.toGrid(NEURON_GRID);
 
-		double[] output = neuralNetwork.predict(grid);
+		double[] output = neuralNetwork.compute(grid);
 
 		resultLabel.setText(Arrays.toString(output));
 

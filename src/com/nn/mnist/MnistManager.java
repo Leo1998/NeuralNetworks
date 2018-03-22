@@ -16,7 +16,7 @@
  *
  */
 
-package com.nn2.mnist;
+package com.nn.mnist;
 
 
 import java.io.BufferedWriter;

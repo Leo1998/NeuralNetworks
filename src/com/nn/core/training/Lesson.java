@@ -24,7 +24,7 @@ public class Lesson implements Iterable<Sample> {
 
 	@Override
 	public Iterator<Sample> iterator() {
-		return new LessonIterator(this);
+		return new LessonShuffleIterator(this);
 	}
 
 }

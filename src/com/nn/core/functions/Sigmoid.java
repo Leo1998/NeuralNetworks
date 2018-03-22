@@ -1,4 +1,4 @@
-package com.nn2.core.functions;
+package com.nn.core.functions;
 
 public class Sigmoid extends TransferFunction {
 
@@ -18,7 +18,7 @@ public class Sigmoid extends TransferFunction {
 	public double getDerivative(double totalInput) {
 		double output = getOutput(totalInput);
 
-		double derivative = output * (1d - output) + 0.1;
+		double derivative = output * (1d - output);
 		return derivative;
 	}
 

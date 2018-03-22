@@ -1,4 +1,4 @@
-package com.nn2;
+package com.nn;
 
 import java.awt.Dimension;
 import java.awt.Graphics;

@@ -1,7 +1,7 @@
-package com.nn2.core;
+package com.nn.core;
 
-import com.nn2.core.functions.TransferFunction;
-import com.nn2.core.functions.TransferFunctionType;
+import com.nn.core.functions.TransferFunction;
+import com.nn.core.functions.TransferFunctionType;
 
 public abstract class AbstractNeuralNetwork {
 
@@ -24,8 +24,12 @@ public abstract class AbstractNeuralNetwork {
 	
 	public abstract int countNeurons(int layer);
 
-	public abstract double[] predict(double[] input);
+	public abstract double[] compute(double[] input);
 	
+	public TransferFunction getTransferFunction() {
+		return transferFunction;
+	}
+
 	public int getLayerCount() {
 		return layerCount;
 	}

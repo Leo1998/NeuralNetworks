@@ -1,154 +1,217 @@
 package com.nn.core;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Random;
 
-import com.nn.core.neuron.BiasNeuron;
-import com.nn.core.neuron.Neuron;
-import com.nn.core.training.Lesson;
-import com.nn.core.training.Sample;
+import com.nn.core.functions.TransferFunctionType;
 
-public abstract class NeuralNetwork {
+public class NeuralNetwork extends AbstractNeuralNetwork {
 
-	protected List<Layer> layers;
+	private final double[][] neurons;
+	private final double[][] weightMatrix;
+	private final double[][] biases;
 
-	protected List<Neuron> inputNeurons;
-	protected List<Neuron> outputNeurons;
+	public NeuralNetwork(int[] shape, TransferFunctionType transferFunctionType, boolean useBiases) {
+		super(shape, transferFunctionType);
 
-	public NeuralNetwork() {
-		this.layers = new ArrayList<>();
-	}
+		this.neurons = new double[layerCount][];
+		for (int l = 0; l < layerCount; l++) {
+			neurons[l] = new double[shape[l]];
+		}
 
-	protected void setDefaultIO() {
-		this.inputNeurons = new ArrayList<>();
-
-		Layer firstLayer = getLayerAt(0);
-		for (Neuron neuron : firstLayer.getNeurons()) {
-			if (!(neuron instanceof BiasNeuron)) {
-				inputNeurons.add(neuron);
+		if (useBiases) {
+			this.biases = new double[layerCount - 1][];
+			for (int l = 1; l < layerCount; l++) {
+				biases[l - 1] = new double[shape[l]];
 			}
+		} else {
+			this.biases = null;
 		}
 
-		outputNeurons = ((Layer) getLayerAt(getLayerCount() - 1)).getNeurons();
-	}
-
-	public void setInput(double... inputVector) {
-		if (inputVector.length != inputNeurons.size()) {
-			throw new IllegalArgumentException("Input vector size does not match network input dimension!");
-		}
-
-		int i = 0;
-		for (Neuron neuron : this.inputNeurons) {
-			neuron.setInput(inputVector[i]);
-			i++;
+		this.weightMatrix = new double[layerCount - 1][];
+		for (int l = 0; l < layerCount - 1; l++) {
+			weightMatrix[l] = new double[countNeurons(l) * countNeurons(l + 1)];
 		}
 	}
 
-	public double[] calculateOutput() {
-		for (Layer layer : this.layers) {
-			layer.calculate();
-		}
-		
-		double[] outputBuffer = new double[outputNeurons.size()];
+	public void randomizeWeights(double r) {
+		Random random = new Random();
 
-		int i = 0;
-		for (Neuron c : outputNeurons) {
-			outputBuffer[i] = c.getOutput();
-			i++;
-		}
+		for (int l = 0; l < layerCount - 1; l++) {
+			for (int n = 0; n < countNeurons(l); n++) {
+				for (int n1 = 0; n1 < countNeurons(l + 1); n1++) {
+					setWeight(l, n, n1, random.nextDouble() * r * 2 - r);
+				}
 
-		return outputBuffer;
-	}
-
-	public void train(Lesson lesson, double learningRate) {
-		long startTime = System.currentTimeMillis();
-
-		for (Sample sample : lesson) {
-			trainBackpropagation(sample, learningRate);
-		}
-
-		long endTime = System.currentTimeMillis();
-		long time = endTime - startTime;
-		System.out.println("NeuralNetwork: Training took " + time + " ms");
-	}
-
-	private void trainBackpropagation(Sample sample, double learningRate) {
-		double[] input = sample.getInput();
-		double[] desiredOutput = sample.getDesiredOutput();
-
-		this.setInput(input);
-		this.calculateOutput();
-
-		Map<Connection, Double> errorSignalMap = new HashMap<Connection, Double>();
-
-		for (int l = getLayerCount() - 1; l > 0; l--) {
-			Layer layer = layers.get(l);
-			Map<Connection, Double> lastErrorSignalMap = new HashMap<Connection, Double>();
-			lastErrorSignalMap.putAll(errorSignalMap);
-			errorSignalMap.clear();
-
-			for (int i = 0; i < layer.getNeuronCount(); i++) {
-				Neuron n = layer.getNeuron(i);
-				double out = n.getOutput();
-
-				for (Connection inConn : n.getInputConnections()) {
-					double inNeuronOut = inConn.getInNeuron().getOutput();
-					double netInput = inNeuronOut * inConn.getWeight().getValue();
-
-					double errorSignal;
-					if (layer == getLayerAt(getLayerCount() - 1)) {
-						errorSignal = n.getTransferFunction().getDerivative(netInput) * (desiredOutput[i] - out);
-					} else {
-						double sum = 0;
-
-						for (Connection outConn : n.getOutputConnections()) {
-							double outConnWeight = outConn.getWeight().getValue();
-
-							sum += outConnWeight * lastErrorSignalMap.get(outConn);
-						}
-
-						errorSignal = n.getTransferFunction().getDerivative(netInput) * sum;
-					}
-
-					double deltaWeight = learningRate * errorSignal * inNeuronOut;
-					double newWeight = inConn.getWeight().getValue() + deltaWeight;
-					inConn.getWeight().setValue(newWeight);
-
-					errorSignalMap.put(inConn, errorSignal);
+				if (l > 0 && biases != null) {
+					biases[l - 1][n] = random.nextDouble() * r * 2 - r;
 				}
 			}
 		}
 	}
 
-	public int getLayerCount() {
-		return this.layers.size();
+	@Override
+	public int countNeurons(int layer) {
+		return shape[layer];
 	}
 
-	public void addLayer(Layer layer) {
-		layers.add(layer);
+	public double getNeuron(int l, int n) {
+		return neurons[l][n];
+	}
+	
+	public boolean hasBiases() {
+		return biases != null;
+	}
+	
+	public double getBias(int l, int n) {
+		if (biases == null) {
+			throw new IllegalStateException("NeuralNetwork is not configured for biases!");
+		}
+		if (l == 0) {
+			throw new IllegalStateException("Input layer has no biases!");
+		}
+		return biases[l - 1][n];
+	}
+	
+	public void setBias(int l, int n, double bias) {
+		if (biases == null) {
+			throw new IllegalStateException("NeuralNetwork is not configured for biases!");
+		}
+		if (l == 0) {
+			throw new IllegalStateException("Input layer has no biases!");
+		}
+		biases[l - 1][n] = bias;
 	}
 
-	public void addLayer(Layer layer, int i) {
-		layers.add(i, layer);
+	/**
+	 * 
+	 * @param l1
+	 *            the layer from which the connection is coming
+	 * @param n1
+	 *            the neuron index from which the connection is coming
+	 * @param n2
+	 *            the neuron index in the next layer to which the connection is
+	 *            going
+	 * @return the weight
+	 */
+	public double getWeight(int l1, int n1, int n2) {
+		return weightMatrix[l1][n1 + n2 * countNeurons(l1)];
 	}
 
-	public List<Layer> getLayers() {
-		return Collections.unmodifiableList(layers);
+	/**
+	 * 
+	 * @param l1
+	 *            the layer from which the connection is coming
+	 * @param n1
+	 *            the neuron index from which the connection is coming
+	 * @param n2
+	 *            the neuron index in the next layer to which the connection is
+	 *            going
+	 * @param the
+	 *            weight
+	 */
+	public void setWeight(int l1, int n1, int n2, double weight) {
+		weightMatrix[l1][n1 + n2 * countNeurons(l1)] = weight;
 	}
 
-	public Layer getLayerAt(int i) {
-		return layers.get(i);
-	}
+	@Override
+	public double[] compute(double[] input) {
+		assert (input.length == getInputCount());
 
-	public List<Neuron> getInputNeurons() {
-		return inputNeurons;
-	}
+		System.arraycopy(input, 0, neurons[0], 0, getInputCount());
 
-	public List<Neuron> getOutputNeurons() {
-		return outputNeurons;
+		for (int l = 1; l < layerCount; l++) {
+			for (int n = 0; n < countNeurons(l); n++) {
+				double weightedSum = 0;
+
+				for (int n0 = 0; n0 < countNeurons(l - 1); n0++) {
+					double weight = getWeight(l - 1, n0, n);
+
+					if (weight != Double.NaN) {// check if connection exists
+						weightedSum += getNeuron(l - 1, n0) * weight;
+					}
+				}
+				
+				if (biases != null) {
+					weightedSum += getBias(l, n);
+				}
+
+				neurons[l][n] = transferFunction.getOutput(weightedSum);
+			}
+		}
+
+		double[] output = new double[getOutputCount()];
+		System.arraycopy(neurons[layerCount - 1], 0, output, 0, getOutputCount());
+
+		return output;
 	}
+	
+	
+	/*
+	 public void trainBackpropagation(Sample sample, double learningRate) {
+		double[] input = sample.getInput();
+		double[] desiredOutput = sample.getDesiredOutput();
+
+		this.predict(input);
+
+		// iterate back
+		for (int l = getLayerCount() - 1; l > 0; l--) {
+			for (int i = 0; i < countNeurons(l); i++) {
+				double neuron = getNeuron(l, i);
+
+				for (int j = 0; j < countNeurons(l - 1); j++) {
+					double inNeuron = getNeuron(l - 1, j);
+					double connWeight = getWeight(l - 1, j, i);
+
+					double netInput = inNeuron * connWeight;
+
+					double delta;
+					if (l == getLayerCount() - 1) {
+						delta = transferFunction.getDerivative(netInput) * (desiredOutput[i] - neuron);
+					} else {
+						double sum = 0;
+
+						for (int k = 0; k < countNeurons(l + 1); k++) {
+							double outConnWeight = getWeight(l, i, k);
+
+							sum += outConnWeight * getError(l, i, k);
+						}
+
+						delta = transferFunction.getDerivative(netInput) * sum;
+					}
+
+					double deltaWeight = learningRate * delta * inNeuron;
+					double newWeight = connWeight + deltaWeight;
+					setWeight(l - 1, j, i, newWeight);
+
+					setError(l - 1, j, i, delta);
+				}
+				
+				if (biases != null) {
+					double bias = getBias(l, i);
+					
+					double delta;
+					if (l == getLayerCount() - 1) {
+						delta = transferFunction.getDerivative(bias) * (desiredOutput[i] - neuron);
+					} else {
+						double sum = 0;
+
+						for (int k = 0; k < countNeurons(l + 1); k++) {
+							double outConnWeight = getWeight(l, i, k);
+
+							sum += outConnWeight * getError(l, i, k);
+						}
+
+						delta = transferFunction.getDerivative(bias) * sum;
+					}
+					
+					
+					double deltaBias = learningRate * delta;
+					double newBias = bias + deltaBias;
+					setBias(l, i, newBias);
+				}
+			}
+		}
+	}
+	 */
 
 }

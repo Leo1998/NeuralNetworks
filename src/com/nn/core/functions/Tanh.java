@@ -1,4 +1,4 @@
-package com.nn2.core.functions;
+package com.nn.core.functions;
 
 public class Tanh extends TransferFunction {
 

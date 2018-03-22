@@ -1,4 +1,4 @@
-package com.nn.core.util;
+package com.nn.utils;
 
 public class MathUtil {
 
