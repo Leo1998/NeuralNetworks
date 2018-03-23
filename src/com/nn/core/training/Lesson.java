@@ -30,7 +30,7 @@ public class Lesson implements Iterable<Sample> {
 
 	@Override
 	public Iterator<Sample> iterator() {
-		return new LessonShuffleIterator(this);
+		return new LessonIterator(this);
 	}
 
 }

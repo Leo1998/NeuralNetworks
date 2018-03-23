@@ -59,7 +59,7 @@ public class DrawPanel extends JPanel implements MouseListener, MouseMotionListe
 
 				for (int x = xGrid * scale; x < xGrid * scale + scale; x++) {
 					for (int y = yGrid * scale; y < yGrid * scale + scale; y++) {
-						if (pixels[x + y * size] > 0) {
+						if (pixels[x + y * size] != 0) {
 							count++;
 						}
 					}

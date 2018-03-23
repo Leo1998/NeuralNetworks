@@ -11,4 +11,17 @@ public class OneHot {
 		return a;
 	}
 	
+	public static int maxIndex(double[] out) {
+		double max = out[0];
+		int maxIdx = 0;
+		for (int i = 1; i < out.length; i++) {
+			if (out[i] >= max) {
+				max = out[i];
+				maxIdx = i;
+			}
+		}
+		
+		return maxIdx;
+	}
+	
 }

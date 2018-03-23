@@ -9,7 +9,7 @@ public class Linear extends TransferFunction {
 
 	@Override
 	public double getDerivative(double totalInput) {
-		return 1D;
+		throw new IllegalStateException("Can't use the linear activation function where a derivative is required.");
 	}
 
 }

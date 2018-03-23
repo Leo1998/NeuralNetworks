@@ -1,8 +1,16 @@
 package com.nn.core;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import com.nn.core.functions.TransferFunctionType;
 import com.nn.utils.Matrix;
 import com.nn.utils.MatrixMath;
+import com.nn.utils.StreamUtils;
 
 public class NeuralNetwork extends AbstractNeuralNetwork {
 
@@ -115,54 +123,57 @@ public class NeuralNetwork extends AbstractNeuralNetwork {
 
 		return output;
 	}
+	
+	public void load(File file) {
+		try {
+			FileInputStream f = new FileInputStream(file);
+			this.load(new DataInputStream(f));
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
 
-	/*
-	 * public void trainBackpropagation(Sample sample, double learningRate) {
-	 * double[] input = sample.getInput(); double[] desiredOutput =
-	 * sample.getDesiredOutput();
-	 * 
-	 * this.predict(input);
-	 * 
-	 * // iterate back for (int l = getLayerCount() - 1; l > 0; l--) { for (int
-	 * i = 0; i < countNeurons(l); i++) { double neuron = getNeuron(l, i);
-	 * 
-	 * for (int j = 0; j < countNeurons(l - 1); j++) { double inNeuron =
-	 * getNeuron(l - 1, j); double connWeight = getWeight(l - 1, j, i);
-	 * 
-	 * double netInput = inNeuron * connWeight;
-	 * 
-	 * double delta; if (l == getLayerCount() - 1) { delta =
-	 * transferFunction.getDerivative(netInput) * (desiredOutput[i] - neuron); }
-	 * else { double sum = 0;
-	 * 
-	 * for (int k = 0; k < countNeurons(l + 1); k++) { double outConnWeight =
-	 * getWeight(l, i, k);
-	 * 
-	 * sum += outConnWeight * getError(l, i, k); }
-	 * 
-	 * delta = transferFunction.getDerivative(netInput) * sum; }
-	 * 
-	 * double deltaWeight = learningRate * delta * inNeuron; double newWeight =
-	 * connWeight + deltaWeight; setWeight(l - 1, j, i, newWeight);
-	 * 
-	 * setError(l - 1, j, i, delta); }
-	 * 
-	 * if (biases != null) { double bias = getBias(l, i);
-	 * 
-	 * double delta; if (l == getLayerCount() - 1) { delta =
-	 * transferFunction.getDerivative(bias) * (desiredOutput[i] - neuron); }
-	 * else { double sum = 0;
-	 * 
-	 * for (int k = 0; k < countNeurons(l + 1); k++) { double outConnWeight =
-	 * getWeight(l, i, k);
-	 * 
-	 * sum += outConnWeight * getError(l, i, k); }
-	 * 
-	 * delta = transferFunction.getDerivative(bias) * sum; }
-	 * 
-	 * 
-	 * double deltaBias = learningRate * delta; double newBias = bias +
-	 * deltaBias; setBias(l, i, newBias); } } } }
-	 */
+	public void load(DataInputStream stream) {
+		try {
+			for (int l = 0; l < getLayerCount() - 1; l++) {
+				Double[] packed = new Double[getWeights(l).size()];
+
+				for (int i = 0; i < packed.length; i++) {
+					packed[i] = stream.readDouble();
+				}
+				
+				getWeights(l).fromPackedArray(packed, 0);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			StreamUtils.closeQuiet(stream);
+		}
+	}
+	
+	public void save(File file) {
+		try {
+			FileOutputStream f = new FileOutputStream(file);
+			this.save(new DataOutputStream(f));
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void save(DataOutputStream stream) {
+		try {
+			for (int l = 0; l < getLayerCount() - 1; l++) {
+				Double[] packed = getWeights(l).toPackedArray();
+
+				for (Double d : packed) {
+					stream.writeDouble(d);
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			StreamUtils.closeQuiet(stream);
+		}
+	}
 
 }
