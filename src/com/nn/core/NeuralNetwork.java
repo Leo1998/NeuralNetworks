@@ -110,7 +110,7 @@ public class NeuralNetwork extends AbstractNeuralNetwork {
 
 		double[] output = new double[getOutputCount()];
 		for (int i = 0; i < getOutputCount(); i++) {
-			output[i] = this.neurons[getLayerCount() - 1].get(0, i);
+			output[i] = this.neurons[getLayerCount() - 1].get(i, 0);
 		}
 
 		return output;

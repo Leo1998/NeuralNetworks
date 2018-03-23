@@ -1,6 +1,7 @@
 package com.nn.core.training;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class Lesson implements Iterable<Sample> {
 
@@ -8,6 +9,11 @@ public class Lesson implements Iterable<Sample> {
 
 	public Lesson(Sample... samples) {
 		this.samples = samples;
+	}
+
+	public Lesson(List<Sample> batch) {
+		this.samples = new Sample[batch.size()];
+		batch.toArray(samples);
 	}
 
 	public Sample[] getSamples() {

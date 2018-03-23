@@ -7,7 +7,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -18,13 +20,16 @@ import javax.swing.WindowConstants;
 
 import com.nn.core.NeuralNetwork;
 import com.nn.core.functions.TransferFunctionType;
+import com.nn.core.training.Lesson;
+import com.nn.core.training.Sample;
+import com.nn.core.training.Trainer;
 import com.nn.mnist.MnistManager;
+import com.nn.utils.OneHot;
 
 public class MnistTest implements KeyListener {
 
 	private static final int NEURON_GRID = 28;
 	private static final char[] LETTERS = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-	private static final double LEARNING_RATE = 0.001;
 
 	private Object waitLock = new Object();
 
@@ -32,13 +37,14 @@ public class MnistTest implements KeyListener {
 	private DrawPanel drawPanel;
 	private JLabel resultLabel;
 
-	private NeuralNetwork neuralNetwork;
+	private NeuralNetwork nn;
 	private Thread worker;
 
 	public MnistTest() {
-		int[] shape = { NEURON_GRID * NEURON_GRID, 300, LETTERS.length };
+		int[] shape = { NEURON_GRID * NEURON_GRID, 600, 10 };
 
-		this.neuralNetwork = new NeuralNetwork(shape, TransferFunctionType.Sigmoid);
+		this.nn = new NeuralNetwork(shape, TransferFunctionType.Sigmoid);
+		this.nn.randomizeWeights(0.5);
 
 		createView();
 	}
@@ -46,7 +52,7 @@ public class MnistTest implements KeyListener {
 	protected void detectCurrentLetter() {
 		double[] grid = drawPanel.toGrid(NEURON_GRID);
 
-		double[] output = neuralNetwork.compute(grid);
+		double[] output = nn.compute(grid);
 
 		resultLabel.setText(Arrays.toString(output));
 
@@ -64,20 +70,29 @@ public class MnistTest implements KeyListener {
 				try {
 					MnistManager m = new MnistManager("train-images.idx3-ubyte", "train-labels.idx1-ubyte", 60000);
 
-					for (int i = 0; i < 60000; i++) {
+					Trainer trainer = new Trainer(nn);
+
+					List<Sample> batch = new ArrayList<>();
+					for (int i = 0; i < 50; i++) {
 						m.setCurrent(i);
 
 						int[][] image = m.readImage();
 						int label = m.readLabel();
 
-						drawPanel.display(image);
-						resultLabel.setText("Label: " + label);
-
-						try {
-							Thread.sleep(300);
-						} catch (Exception e) {
+						double[] in = new double[NEURON_GRID * NEURON_GRID];
+						for (int x = 0; x < NEURON_GRID; x++) {
+							for (int y = 0; y < NEURON_GRID; y++) {
+								in[x + y * NEURON_GRID] = (double) image[x][y] / 255D;
+							}
 						}
+						double[] out = OneHot.as(label, 10);
+
+						batch.add(new Sample(in, out));
 					}
+					Lesson lesson = new Lesson(batch);
+					System.out.println("Batch loaded!");
+					
+					trainer.train(lesson, 150, 0, 0.006, 0.9);
 
 					m.close();
 				} catch (IOException e) {

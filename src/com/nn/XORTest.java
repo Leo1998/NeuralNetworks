@@ -9,7 +9,7 @@ import com.nn.core.training.Trainer;
 public class XORTest {
 
 	public static void main(String[] args) {
-		NeuralNetwork nn = new NeuralNetwork(new int[] { 2, 4, 1 }, TransferFunctionType.Sigmoid);
+		NeuralNetwork nn = new NeuralNetwork(new int[] { 2, 8, 1 }, TransferFunctionType.Sigmoid);
 		nn.randomizeWeights(0.5);
 
 		Lesson lesson = new Lesson(new Sample[] { //
@@ -21,7 +21,7 @@ public class XORTest {
 
 		Trainer trainer = new Trainer(nn);
 
-		trainer.train(lesson, 50000, 0.15, 0.6);
+		trainer.train(lesson, 50000, 0.01, 0.1, 0.6);
 	}
 
 }

@@ -51,46 +51,45 @@ public class Trainer {
 		return Math.sqrt(totalError / (lesson.countSamples() * lesson.getSample(0).getDesiredOutput().length));
 	}
 
-	public void train(Lesson lesson, int epochs, double learningRate, double momentum) {
+	public void train(Lesson lesson, int epochs, double earlyStopThreshold, double learningRate, double momentum) {
 		double errorBefore = calcError(lesson);
 		System.out.println("Starting Training... (Error before: " + errorBefore + ")");
 
 		for (int i = 0; i < epochs; i++) {
-			trainEpoch(lesson, learningRate, momentum);
+			double errorEpoch = trainEpoch(lesson, learningRate, momentum);
+
+			System.out.println("Epoch " + i + " finished with Error: " + errorEpoch);
+
+			if (earlyStopThreshold > 0) {
+				if (errorEpoch < earlyStopThreshold) {
+					System.out.println("Early stopping!");
+
+					break;
+				}
+			}
 		}
 
 		double errorAfter = calcError(lesson);
 		System.out.println("Training finished!!! (Error after: " + errorAfter + ")");
 	}
 
-	private void trainEpoch(Lesson lesson, double learningRate, double momentum) {
+	private double trainEpoch(Lesson lesson, double learningRate, double momentum) {
 		clearErrors();
-
+		double totalError = 0.0;
+		
 		for (Sample sample : lesson) {
 			double[] output = nn.compute(sample.getInput());
 			calcError(output, sample.getDesiredOutput());
+			
+			for (int i = 0; i < output.length; i++) {
+				double delta = output[i] - sample.getDesiredOutput()[i];
+				totalError += (delta * delta);
+			}
 		}
 
 		learn(learningRate, momentum);
-	}
 
-	private void learn(double learningRate, double momentum) {
-		for (int l = 0; l < nn.getLayerCount() - 1; l++) {
-			final Matrix m1 = MatrixMath.multiply(this.accDeltaMatrix[l], learningRate);
-			final Matrix m2 = MatrixMath.multiply(this.previousDeltaMatrix[l], momentum);
-			this.previousDeltaMatrix[l] = MatrixMath.add(m1, m2);
-
-			nn.setWeights(l, MatrixMath.add(nn.getWeights(l), this.previousDeltaMatrix[l]));
-
-			this.accDeltaMatrix[l].clear();
-		}
-	}
-
-	private void clearErrors() {
-		for (int l = 0; l < nn.getLayerCount(); l++) {
-			errorMatrix[l].clear();
-			errorDeltaMatrix[l].clear();
-		}
+		return Math.sqrt(totalError / (lesson.countSamples() * nn.getOutputCount()));
 	}
 
 	private void calcError(double[] output, double[] desiredOutput) {
@@ -118,6 +117,18 @@ public class Trainer {
 		}
 	}
 
+	private void learn(double learningRate, double momentum) {
+		for (int l = 0; l < nn.getLayerCount() - 1; l++) {
+			final Matrix m1 = MatrixMath.multiply(this.accDeltaMatrix[l], learningRate);
+			final Matrix m2 = MatrixMath.multiply(this.previousDeltaMatrix[l], momentum);
+			this.previousDeltaMatrix[l] = MatrixMath.add(m1, m2);
+
+			nn.setWeights(l, MatrixMath.add(nn.getWeights(l), this.previousDeltaMatrix[l]));
+
+			this.accDeltaMatrix[l].clear();
+		}
+	}
+
 	/**
 	 * 
 	 * @param l1
@@ -135,6 +146,13 @@ public class Trainer {
 
 	private void accumulateBiasDelta(int l1, int n, double value) {
 		accDeltaMatrix[l1].add(nn.countNeurons(l1), n, value);
+	}
+
+	private void clearErrors() {
+		for (int l = 0; l < nn.getLayerCount(); l++) {
+			errorMatrix[l].clear();
+			errorDeltaMatrix[l].clear();
+		}
 	}
 
 }
